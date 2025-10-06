@@ -142,3 +142,32 @@ def test_transaction_bin_ip_country_mismatch():
     assert data["risk_score"] > 0, "Risk score should be greater than 0 for country mismatch"
     assert "country" in data["reasons"].lower() or "geo" in data["reasons"].lower(), \
         "Reasons should mention country/geo mismatch"
+    
+def test_transaction_response_structure():
+    body = {
+        "transaction_id": 300,
+        "amount_mxn": 500.0,
+        "product_type": "digital"
+    }
+    r = client.post("/transaction", json=body)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    
+    assert "transaction_id" in data, "Response should contain transaction_id"
+    assert "decision" in data, "Response should contain decision"
+    assert "risk_score" in data, "Response should contain risk_score"
+    assert "reasons" in data, "Response should contain reasons"
+
+    assert isinstance(data["transaction_id"], int), "transaction_id should be int"
+    assert isinstance(data["decision"], str), "decision should be string"
+    assert isinstance(data["risk_score"], (int, float)), "risk_score should be numeric"
+    assert isinstance(data["reasons"], str), "reasons should be string"
+
+    assert data["transaction_id"] == 300, "transaction_id should match request"
+
+    assert data["decision"] in ("ACCEPTED", "IN_REVIEW", "REJECTED"), \
+        f"decision should be ACCEPTED, IN_REVIEW or REJECTED, got {data['decision']}"
+    
+    assert len(data["reasons"]) > 0, "reasons should not be empty"
+    
+    assert data["risk_score"] >= 0, "risk_score should be non-negative"
