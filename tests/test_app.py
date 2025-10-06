@@ -106,7 +106,6 @@ def test_transaction_hour_out_of_range():
     r = client.post("/transaction", json=body_under)
     assert r.status_code == 200, f"Expected 200, got {r.status_code}"
 
-
 def test_transaction_bin_ip_country_mismatch():
     """Verificar comportamiento cuando bin_country != ip_country"""
     body = {
