@@ -83,3 +83,34 @@ def test_transaction_hard_block_rejection():
     data = r.json()
     assert data["transaction_id"] == 99
     assert data["decision"] == "REJECTED"
+
+def test_transaction_hour_out_of_range():
+    """Verficiar que si la hora tiene un valor fuera del rango 0 a 23 horas, se devuelva error"""
+
+    body_over = {
+        "transaction_id": 101,
+        "amount_mxn": 1000.0,
+        "hour": 24,
+        "product_type": "digital"
+    }
+    r = client.post("/transaction", json=body_over)
+    assert r.status_code == 422, f"Expected 422 for hour=24, got {r.status_code}"
+
+    body_under = {
+        "transaction_id": 102,
+        "amount_mxn": 1000.0,
+        "hour": -1,
+        "product_type": "digital"
+    }
+
+    r = client.post("/transaction", json=body_under)
+    assert r.status_code == 422, f"Expected 422 for hour=-1, got {r.status_code}"
+
+    body_way_over = {
+        "transaction_id": 103,
+        "amount_mxn": 1000.0,
+        "hour": 25,
+        "product_type": "digital"
+    }
+    r = client.post("/transaction", json=body_way_over)
+    assert r.status_code == 422, f"Expected 422 for hour=25, got {r.status_code}"
