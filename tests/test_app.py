@@ -114,3 +114,31 @@ def test_transaction_hour_out_of_range():
     }
     r = client.post("/transaction", json=body_way_over)
     assert r.status_code == 422, f"Expected 422 for hour=25, got {r.status_code}"
+
+def test_transaction_bin_ip_country_mismatch():
+    body = {
+        "transaction_id": 200,
+        "amount_mxn": 3000.0,
+        "customer_txn_30d": 5,
+        "geo_state": "CDMX",
+        "device_type": "desktop",
+        "chargeback_count": 0,
+        "hour": 14,
+        "product_type": "digital",
+        "latency_ms": 150,
+        "user_reputation": "trusted",
+        "device_fingerprint_risk": "low",
+        "ip_risk": "low",
+        "email_risk": "low",
+        "bin_country": "MX",
+        "ip_country": "US"
+    }
+    r = client.post("/transaction", json=body)
+    assert r.status_code == 200, r.text
+    data = r.json()
+    assert data["transaction_id"] == 200
+    assert data["decision"] in ("IN_REVIEW", "REJECTED"), \
+        f"Expected IN_REVIEW or REJECTED due to country mismatch, got {data['decision']}"
+    assert data["risk_score"] > 0, "Risk score should be greater than 0 for country mismatch"
+    assert "country" in data["reasons"].lower() or "geo" in data["reasons"].lower(), \
+        "Reasons should mention country/geo mismatch"
